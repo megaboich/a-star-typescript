@@ -10,6 +10,7 @@ function Run() {
     let random = new DefaultRandom();
     game = new Game(random);
     render = new Render(document, game);
+    console.log(game);
 }
 
 Run();

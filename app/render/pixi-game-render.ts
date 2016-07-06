@@ -5,8 +5,9 @@ import { AnimationScale } from './pixi-ext/./pixi-animation-scale'
 import { AnimationFade } from './pixi-ext/./pixi-animation-fade'
 import { AnimationDelay } from './pixi-ext/./pixi-animation-delay'
 
-import { Game, TerrainType } from '../game/game'
+import { Game, TerrainType, GridTile } from '../game/game'
 import { RenderHelper } from './pixi-game-render-helper'
+import { AStar } from '../hexgrid/a-star'
 
 export class Render {
     private stage: PIXI.Container;
@@ -76,6 +77,7 @@ export class Render {
 
         this.terrainSprites = [];
         this.renderHelper.buildTerrainSprites(this.game, (sprite) => {
+            sprite.alpha = 0.5;
             this.staticRoot.addChild(sprite);
             this.terrainSprites.push(sprite);
         });
@@ -118,6 +120,12 @@ export class Render {
         }
 
         this.startOrFinishFlag = !this.startOrFinishFlag;
+
+        if (this.startTerrainIndex >= 0 && this.finishTerrainIndex >= 0) {
+            let astar = new AStar(this.game.grid);
+            var path = astar.GetPath(this.startTerrainIndex, this.finishTerrainIndex);
+            console.log('path: ', path);
+        }
     }
 
     onMouseMove(event) {

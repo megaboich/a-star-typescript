@@ -25,7 +25,7 @@ describe(`Hex Grid`, () => {
         firstCell.name = 'First cell';
         firstCell.data.push('Some data of first cell');
 
-        grid.enumerateAllCells((cellValue, cellIndex) => {
+        grid.enumerateAllValues((cellValue, cellIndex) => {
             if (cellIndex == 0) {
                 expect(cellValue.name).toEqual('First cell');
                 expect(cellValue.data).toEqual(['Some data of first cell']);

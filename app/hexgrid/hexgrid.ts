@@ -7,7 +7,7 @@ export enum HexDirection {
     NW
 }
 
-class Cell<T>{
+export class Cell<T>{
     value: T;
     row: number;
     col: number;
@@ -44,7 +44,17 @@ export class HexGrid<T> {
         return this.data[cellIndex].value;
     }
 
-    enumerateAllCells(func: (value: T, cellIndex: number) => void) {
+    getCell(cellIndex: number): Cell<T> {
+        return this.data[cellIndex];
+    }
+
+    enumerateAllCells(func: (cell: Cell<T>, cellIndex: number) => void) {
+        this.data.forEach((cell, index) => {
+            func(cell, index);
+        });
+    }
+
+    enumerateAllValues(func: (value: T, cellIndex: number) => void) {
         this.data.forEach((cell, index) => {
             func(cell.value, index);
         });
@@ -103,7 +113,7 @@ export class HexGrid<T> {
         }
 
         if (newcol >= 0 && newcol < this.width && newrow >= 0 && newrow < this.height) {
-            return this.getCellIndex(row, col);
+            return this.getCellIndex(newrow, newcol);
         }
         return -1;
     }
