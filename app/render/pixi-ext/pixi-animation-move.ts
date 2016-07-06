@@ -1,4 +1,3 @@
-import * as pixi from 'pixi.js'
 import { IAnimation, AnimationBase } from './pixi-animation'
 
 export interface EntityPosition {

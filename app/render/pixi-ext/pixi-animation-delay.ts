@@ -1,4 +1,3 @@
-import * as pixi from 'pixi.js'
 import { IAnimation } from './pixi-animation'
 
 export class AnimationDelay implements IAnimation {

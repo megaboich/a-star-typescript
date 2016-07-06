@@ -1,4 +1,3 @@
-import * as pixi from 'pixi.js'
 import { AnimationsManager } from './pixi-ext/pixi-animation-manager'
 import { AnimationQueue } from './pixi-ext/./pixi-animation-combined'
 import { AnimationMove, EntityPosition } from './pixi-ext/./pixi-animation-move'
@@ -10,35 +9,41 @@ import { Game, TerrainType } from '../game/game'
 import { RenderHelper } from './pixi-game-render-helper'
 
 export class Render {
-    private stage: pixi.Container;
-    private fpsText: pixi.Text;
-    private staticRoot: pixi.Container = null;
+    private stage: PIXI.Container;
+    private fpsText: PIXI.Text;
+    private staticRoot: PIXI.Container = null;
     private game: Game;
     private animationsManager: AnimationsManager;
     private renderHelper: RenderHelper;
 
-    private terrainSprites: pixi.Sprite[];
+    private hoveredTerrainIndex: number;
+    private startTerrainIndex: number;
+    private finishTerrainIndex: number;
+    private startOrFinishFlag: boolean = true;
+    private brightenFilter: PIXI.filters.ColorMatrixFilter;
+
+    private terrainSprites: PIXI.Sprite[];
 
     constructor(document: Document, game: Game) {
         this.renderHelper = new RenderHelper(game);
         this.game = game;
 
-        (pixi.utils as any)._saidHello = true;
-        var renderer = pixi.autoDetectRenderer(900, 900, { backgroundColor: 0xffffff });
+        (PIXI.utils as any)._saidHello = true;
+        var renderer = PIXI.autoDetectRenderer(600, 630, { backgroundColor: 0xffffff });
         document.body.appendChild(renderer.view);
 
         // create the root of the scene graph
-        this.stage = new pixi.Container();
+        this.stage = new PIXI.Container();
         this.RebuildGraphics();
 
         this.animationsManager = new AnimationsManager(this.onAnimationsCompleted.bind(this));
 
-        var ticker = new pixi.ticker.Ticker();
+        var ticker = new PIXI.ticker.Ticker();
         ticker.add(() => {
             this.animationsManager.Update(ticker.elapsedMS);
 
             renderer.render(this.stage);
-            this.fpsText.text = ticker.FPS.toFixed(2);
+            this.fpsText.text = Math.floor(ticker.FPS).toString();
         });
         ticker.start();
     }
@@ -56,16 +61,16 @@ export class Render {
             this.stage.removeChild(this.staticRoot);
         }
 
-        this.staticRoot = new pixi.Container();
+        this.staticRoot = new PIXI.Container();
         this.stage.addChild(this.staticRoot);
 
-        var style = <pixi.TextStyle>{
+        var style = <PIXI.TextStyle>{
             font: 'Inconsolata, Courier New',
             fill: '#005521',
             lineHeight: 14,
         };
-        this.fpsText = new pixi.Text("", style);
-        this.fpsText.x = 300;
+        this.fpsText = new PIXI.Text("", style);
+        this.fpsText.x = 550;
         this.fpsText.y = 8;
         this.staticRoot.addChild(this.fpsText);
 
@@ -76,46 +81,62 @@ export class Render {
         });
 
         this.staticRoot.interactive = true;
-        this.staticRoot.on('mousedown', this.onButtonDown.bind(this));
-        this.staticRoot.on('touchstart', this.onButtonDown.bind(this));
+        this.staticRoot.on('mousedown', this.onMouseDown.bind(this));
+        this.staticRoot.on('touchstart', this.onMouseDown.bind(this));
+        this.staticRoot.on('mousemove', this.onMouseMove.bind(this));
+
+        this.brightenFilter = new PIXI.filters.ColorMatrixFilter();
+        this.brightenFilter.brightness(1.2);
     }
 
-    onButtonDown(event) {
-        let data: pixi.interaction.InteractionData = event.data;
+    onMouseDown(event) {
+        let data: PIXI.interaction.InteractionData = event.data;
         let terrainIndex = this.renderHelper.coordinatesTranslator.getSpriteIndexFromCoordinates(data.global.x, data.global.y);
-        //console.log(data.global.x, data.global.y, terrainIndex);
 
-        this.terrainSprites.forEach(sprite => sprite.alpha = 0.05);
-        if (terrainIndex >= 0) {
-            this.terrainSprites[terrainIndex].alpha = 0.3;
+        if (terrainIndex < 0 || terrainIndex == this.startTerrainIndex || terrainIndex == this.finishTerrainIndex) {
+            return;
+        }
+
+        if (this.startOrFinishFlag) {
+            if (this.startTerrainIndex >= 0) {
+                let oldStartSprite = this.terrainSprites[this.startTerrainIndex];
+                oldStartSprite.tint = 0xFFFFFF;
+            }
+            this.startTerrainIndex = terrainIndex;
+            let newStartSprite = this.terrainSprites[this.startTerrainIndex];
+            newStartSprite.tint = 0x0fd80f;
+
+
+        } else {
+            if (this.finishTerrainIndex >= 0) {
+                let oldFinishSprite = this.terrainSprites[this.finishTerrainIndex];
+                oldFinishSprite.tint = 0xFFFFFF;
+            }
+            this.finishTerrainIndex = terrainIndex;
+            let newFinishSprite = this.terrainSprites[this.finishTerrainIndex];
+            newFinishSprite.tint = 0xffa30f;
+        }
+
+        this.startOrFinishFlag = !this.startOrFinishFlag;
+    }
+
+    onMouseMove(event) {
+        let data: PIXI.interaction.InteractionData = event.data;
+        let terrainIndex = this.renderHelper.coordinatesTranslator.getSpriteIndexFromCoordinates(data.global.x, data.global.y);
+
+        if (terrainIndex >= 0 && this.hoveredTerrainIndex != terrainIndex) {
+            if (this.hoveredTerrainIndex >= 0) {
+                let oldHoveredSprite = this.terrainSprites[this.hoveredTerrainIndex];
+                oldHoveredSprite.filters = null;
+            }
+            this.hoveredTerrainIndex = terrainIndex;
+            let hoveredSprite = this.terrainSprites[this.hoveredTerrainIndex];
+            hoveredSprite.filters = [this.brightenFilter];
         }
     }
 
     private rebuildDynamicObjects() {
-        /*
-        // Remove existing tiles
-        this.tiles.Values().forEach(element => {
-            this.stage.removeChild(element);
-        });
 
-        this.stage.children.forEach((item) => {
-            if (item instanceof TileSprite) {
-                console.log('Found not deleted ' + (<TileSprite>item).TileKey);
-            }
-        });
-
-        this.tiles = new Dictionary<string, TileSprite>([]);
-
-        // Add tiles from game grid
-        for (var irow = 0; irow < this.game.Grid.Size; ++irow) {
-            for (var icell = 0; icell < this.game.Grid.Size; ++icell) {
-                var tileValue = this.game.Grid.Cells[irow][icell];
-                if (tileValue != 0) {
-                    var tile = this.addTileGraphics(irow, icell, tileValue);
-                    this.registerTile(tile);
-                }
-            }
-        }*/
     }
 
     private bringToFront(tile: PIXI.DisplayObject) {

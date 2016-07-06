@@ -1,4 +1,3 @@
-import * as pixi from 'pixi.js'
 
 export interface IAnimation {
     Update(elapsedMs: number): void;
@@ -7,12 +6,12 @@ export interface IAnimation {
 }
 
 export class AnimationBase {
-    Entity: pixi.DisplayObject;
+    Entity: PIXI.DisplayObject;
     IsCompleted: boolean;
     protected durationRemains: number;
     OnCompleted: () => void;
 
-    constructor(entity: pixi.DisplayObject, durationInMs: number, onCompleted: () => void) {
+    constructor(entity: PIXI.DisplayObject, durationInMs: number, onCompleted: () => void) {
         if (entity == null) {
             throw 'Entity is null';
         }

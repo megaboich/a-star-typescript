@@ -1,4 +1,3 @@
-import * as pixi from 'pixi.js'
 import { IAnimation } from './pixi-animation'
 import { AnimationParallel } from './pixi-animation-combined'
 

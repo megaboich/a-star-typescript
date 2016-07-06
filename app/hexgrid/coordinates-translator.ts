@@ -59,13 +59,13 @@ export class CoordinatesTranslator {
         //normalize coords
         let x = mousex - coords.x;
         let y = coords.y - mousey;
-        console.log('off', x, y);
+        //console.log('off', x, y);
 
         x = x / this.spriteWidthHalf;
         y = y / this.spriteHeightHalf;
 
         if (this.isInsideNormalizedHexagon(x, y)) {
-            console.log('check ok - ' + n);
+            //console.log('check ok - ' + n);
             return {
                 col: col,
                 row: row

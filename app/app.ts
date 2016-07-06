@@ -1,3 +1,4 @@
+import '../lib/pixi.js/pixi.min.js'
 import { DefaultRandom } from './helpers/random'
 import { Render } from './render/pixi-game-render'
 import { Game } from './game/game'

@@ -3,7 +3,6 @@ var webpack = require('webpack');
 module.exports = {
     entry: {
         thirdparty: [
-            'pixi.js',
             'mousetrap'
         ],
 
