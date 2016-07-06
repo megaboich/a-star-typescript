@@ -14,8 +14,8 @@ class Cell<T>{
 }
 
 export class HexGrid<T> {
-    private width: number;
-    private height: number;
+    public width: number;
+    public height: number;
     private datalen: number;
     private data: Cell<T>[];
 
@@ -103,8 +103,12 @@ export class HexGrid<T> {
         }
 
         if (newcol >= 0 && newcol < this.width && newrow >= 0 && newrow < this.height) {
-            return newrow * this.width + newcol;
+            return this.getCellIndex(row, col);
         }
         return -1;
+    }
+
+    getCellIndex(row: number, col: number): number {
+        return row * this.width + col;
     }
 }
