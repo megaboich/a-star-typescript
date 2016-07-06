@@ -1,0 +1,28 @@
+{
+    "name": "hex-field",
+    "version": "1.0.0",
+    "description": "Hex Field",
+    "scripts": {
+        "postinstall": "typings install --global",
+        "build": "webpack",
+        "build:w": "webpack --watch"
+    },
+    "dependencies": {
+        "pixi.js": "^3.0.11",
+        "fs": "0.0.2",
+        "mousetrap": "^1.6.0"
+    },
+    "devDependencies": {
+        "jasmine-core": "^2.4.1",
+        "typescript": "^1.7.5",
+        "typings": "^1.0.4",
+        "webpack": "^1.13.1",
+        "file-loader": "^0.9.0",
+        "css-loader": "^0.23.1",
+        "style-loader": "^0.13.1",
+        "ts-loader": "^0.8.2",
+        "url-loader": "^0.5.7"
+    },
+    "author": "Oleksandr Boiko",
+    "license": "ISC"
+}
