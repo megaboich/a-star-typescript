@@ -83,10 +83,12 @@ export class Render {
     onButtonDown(event) {
         let data: pixi.interaction.InteractionData = event.data;
         let terrainIndex = this.renderHelper.coordinatesTranslator.getSpriteIndexFromCoordinates(data.global.x, data.global.y);
-        console.log(data.global.x, data.global.y, terrainIndex);
+        //console.log(data.global.x, data.global.y, terrainIndex);
 
         this.terrainSprites.forEach(sprite => sprite.alpha = 0.05);
-        this.terrainSprites[terrainIndex].alpha = 0.3;
+        if (terrainIndex >= 0) {
+            this.terrainSprites[terrainIndex].alpha = 0.3;
+        }
     }
 
     private rebuildDynamicObjects() {
