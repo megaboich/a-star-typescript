@@ -1,9 +1,3 @@
-import { AnimationsManager } from './pixi-ext/pixi-animation-manager'
-import { AnimationQueue } from './pixi-ext/pixi-animation-combined'
-import { AnimationMove, EntityPosition } from './pixi-ext/pixi-animation-move'
-import { AnimationScale } from './pixi-ext/pixi-animation-scale'
-import { AnimationFade } from './pixi-ext/pixi-animation-fade'
-import { AnimationDelay } from './pixi-ext/pixi-animation-delay'
 import { HighligtedSprite } from './pixi-ext/pixi-highlighted-sprite'
 
 import { Game, TerrainType, GridTile } from '../game/game'
@@ -11,9 +5,11 @@ import { TerrainPathFindingStrategy } from '../game/terrain-pathfinding-strategy
 import { RenderHelper } from './pixi-game-render-helper'
 import { AStar } from '../hexgrid/a-star'
 
+const START_TINT_COLOR = 0x0fd80f;
+const FINISH_TINT_COLOR = 0xff6666;
+
 export class Render {
     private game: Game;
-    private animationsManager: AnimationsManager;
     private renderHelper: RenderHelper;
 
     private stage: PIXI.Container;
@@ -25,8 +21,9 @@ export class Render {
     private hoveredTerrainIndex: number;
     private startTerrainIndex: number;
     private finishTerrainIndex: number;
-    private startOrFinishFlag: boolean = true;
     private currentPathIndexes: number[];
+    private dragStartPoint: boolean;
+    private dragFinishPoint: boolean;
 
     constructor(document: Document, game: Game) {
         this.renderHelper = new RenderHelper(game);
@@ -38,29 +35,17 @@ export class Render {
 
         // create the root of the scene graph
         this.stage = new PIXI.Container();
-        this.RebuildGraphics();
-
-        this.animationsManager = new AnimationsManager(this.onAnimationsCompleted.bind(this));
+        this.BuildGraphics();
 
         var ticker = new PIXI.ticker.Ticker();
         ticker.add(() => {
-            this.animationsManager.Update(ticker.elapsedMS);
-
             renderer.render(this.stage);
             this.fpsText.text = Math.floor(ticker.FPS).toString();
         });
         ticker.start();
     }
 
-    RebuildGraphics(): void {
-        this.rebuildStaticObjects();
-        this.rebuildDynamicObjects();
-    }
-
-    onAnimationsCompleted(): void {
-    }
-
-    private rebuildStaticObjects() {
+    BuildGraphics(): void {
         if (this.staticRoot != null) {
             this.stage.removeChild(this.staticRoot);
         }
@@ -86,77 +71,119 @@ export class Render {
         });
 
         this.staticRoot.interactive = true;
-        this.staticRoot.on('mousedown', this.onMouseDown.bind(this));
-        this.staticRoot.on('touchstart', this.onMouseDown.bind(this));
-        this.staticRoot.on('mousemove', this.onMouseMove.bind(this));
+        this.staticRoot
+            .on('mousedown', this.onMouseDown.bind(this))
+            .on('touchstart', this.onMouseDown.bind(this))
+            .on('mousemove', this.onMouseMove.bind(this))
+            .on('touchmove', this.onMouseMove.bind(this))
+            .on('mouseup', this.onMouseUp.bind(this))
+            .on('mouseupoutside', this.onMouseUp.bind(this))
+            .on('touchend', this.onMouseUp.bind(this))
+            .on('touchendoutside', this.onMouseUp.bind(this))
 
         this.brightenFilter = new PIXI.filters.ColorMatrixFilter();
         this.brightenFilter.brightness(1.2);
+
+        this.startTerrainIndex = 0;
+        this.terrainSprites[this.startTerrainIndex].setHighlighting({ tintColor: START_TINT_COLOR });
+        this.finishTerrainIndex = (this.game.grid.width * this.game.grid.height) - 1;
+        this.terrainSprites[this.finishTerrainIndex].setHighlighting({ tintColor: FINISH_TINT_COLOR });
+        this.buildPath();
+    }
+
+    onAnimationsCompleted(): void {
     }
 
     onMouseDown(event) {
         let data: PIXI.interaction.InteractionData = event.data;
         let terrainIndex = this.renderHelper.coordinatesTranslator.getCellndexFromCoordinates(data.global.x, data.global.y);
 
-        if (terrainIndex < 0 || terrainIndex == this.startTerrainIndex || terrainIndex == this.finishTerrainIndex) {
+        if (terrainIndex < 0) {
             return;
         }
 
-        if (this.startOrFinishFlag) {
-            if (this.startTerrainIndex >= 0) {
-                this.terrainSprites[this.startTerrainIndex].removeHighlighting({ tintColor: true });
-            }
-            this.startTerrainIndex = terrainIndex;
-            this.terrainSprites[this.startTerrainIndex].setHighlighting({ tintColor: 0x0fd80f });
-        } else {
-            if (this.finishTerrainIndex >= 0) {
-                this.terrainSprites[this.finishTerrainIndex].removeHighlighting({ tintColor: true });
-            }
-            this.finishTerrainIndex = terrainIndex;
-            this.terrainSprites[this.finishTerrainIndex].setHighlighting({ tintColor: 0xffa30f });
+        if (terrainIndex == this.startTerrainIndex) {
+            this.dragStartPoint = true;
+            return;
         }
 
-        this.startOrFinishFlag = !this.startOrFinishFlag;
-
-        if (this.startTerrainIndex >= 0 && this.finishTerrainIndex >= 0) {
-            let strategy = new TerrainPathFindingStrategy(this.game.grid);
-            let astar = new AStar(this.game.grid, strategy);
-            let path = astar.GetPath(this.startTerrainIndex, this.finishTerrainIndex);
-
-            if (this.currentPathIndexes) {
-                this.currentPathIndexes.forEach(i => this.terrainSprites[i].removeHighlighting({ alpha: true }));
-            }
-            this.currentPathIndexes = path;
-            this.currentPathIndexes.forEach(i => this.terrainSprites[i].setHighlighting({ alpha: 1 }));
-
-            console.log('path: ', this.currentPathIndexes);
+        if (terrainIndex == this.finishTerrainIndex) {
+            this.dragFinishPoint = true;
+            return;
         }
+
+        var cell = this.game.grid.getCell(terrainIndex).value;
+        cell.terrainType = this.game.getNextTerrainType(cell.terrainType);
+        this.terrainSprites[terrainIndex].texture = this.renderHelper.getTerrainTexture(cell.terrainType);
+        this.buildPath();
     }
 
     onMouseMove(event) {
         let data: PIXI.interaction.InteractionData = event.data;
         let terrainIndex = this.renderHelper.coordinatesTranslator.getCellndexFromCoordinates(data.global.x, data.global.y);
 
-        if (terrainIndex >= 0 && this.hoveredTerrainIndex != terrainIndex) {
+        if (terrainIndex < 0) {
+            return;
+        }
+
+        if (this.hoveredTerrainIndex != terrainIndex) {
             if (this.hoveredTerrainIndex >= 0) {
                 this.terrainSprites[this.hoveredTerrainIndex].removeHighlighting({ filters: true });
             }
             this.hoveredTerrainIndex = terrainIndex;
             this.terrainSprites[this.hoveredTerrainIndex].setHighlighting({ filters: [this.brightenFilter] });
         }
-    }
 
-    private rebuildDynamicObjects() {
+        if (this.dragStartPoint) {
+            if (terrainIndex == this.finishTerrainIndex) {
+                return;
+            }
+            if (terrainIndex != this.startTerrainIndex) {
+                this.terrainSprites[this.startTerrainIndex].removeHighlighting({ tintColor: true });
+                this.startTerrainIndex = terrainIndex;
+                this.terrainSprites[this.startTerrainIndex].setHighlighting({ tintColor: START_TINT_COLOR });
 
-    }
-
-    private bringToFront(tile: PIXI.DisplayObject) {
-        if (tile) {
-            var p = tile.parent;
-            if (p) {
-                p.removeChild(tile);
-                p.addChild(tile);
+                this.buildPath();
             }
         }
+
+        if (this.dragFinishPoint) {
+            if (terrainIndex == this.startTerrainIndex) {
+                return;
+            }
+            if (terrainIndex != this.finishTerrainIndex) {
+                this.terrainSprites[this.finishTerrainIndex].removeHighlighting({ tintColor: true });
+                this.finishTerrainIndex = terrainIndex;
+                this.terrainSprites[this.finishTerrainIndex].setHighlighting({ tintColor: FINISH_TINT_COLOR });
+
+                this.buildPath();
+            }
+        }
+    }
+
+    onMouseUp(event) {
+        this.dragStartPoint = false;
+        this.dragFinishPoint = false;
+    }
+
+    private buildPath() {
+        let strategy = new TerrainPathFindingStrategy(this.game.grid);
+        let astar = new AStar(this.game.grid, strategy);
+        let path = astar.GetPath(this.startTerrainIndex, this.finishTerrainIndex);
+        if (path.length > 0) {
+            path = [
+                this.startTerrainIndex,
+                ...
+                path
+            ];
+        }
+
+        if (this.currentPathIndexes) {
+            this.currentPathIndexes.forEach(i => this.terrainSprites[i].removeHighlighting({ alpha: true }));
+        }
+        this.currentPathIndexes = path;
+        this.currentPathIndexes.forEach(i => this.terrainSprites[i].setHighlighting({ alpha: 1 }));
+
+        //console.log('path: ', this.currentPathIndexes);
     }
 }

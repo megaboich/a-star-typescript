@@ -3,10 +3,10 @@ import { IRandom } from '../helpers/random'
 
 export enum TerrainType {
     Grass,
-    Desert,
-    Water,
     Tree,
-    Mountain
+    Desert,
+    Mountain,
+    Water
 }
 
 export class GridTile {
@@ -25,7 +25,7 @@ export class Game {
     generateGameField(): HexGrid<GridTile> {
         let grid = new HexGrid<GridTile>(10, 10, (index) => {
             var tile = new GridTile();
-            var rnd = this.random.GetRandomNumber(20);
+            var rnd = this.random.GetRandomNumber(100);
             switch (rnd) {
                 case 0:
                     tile.terrainType = TerrainType.Mountain;
@@ -52,5 +52,13 @@ export class Game {
             return tile;
         });
         return grid;
+    }
+
+    getNextTerrainType(type: TerrainType): TerrainType {
+        let t = type + 1;
+        if (t > TerrainType.Water) {
+            t = TerrainType.Grass;
+        }
+        return t;
     }
 }
