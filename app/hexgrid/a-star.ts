@@ -1,6 +1,6 @@
 import { HexGrid, HexDirection, Cell } from './hexgrid'
 import { GridTile, TerrainType } from '../game/game'
-import { Heap } from 'typescript-collections';
+import { BinaryHeap } from '../helpers/binary-heap';
 
 class Node<T> extends Cell<T> {
     F: number;
@@ -33,14 +33,11 @@ export class AStar<T> {
     }
 
     public GetPath(startCellIndex: number, finishCellIndex: number): number[] {
+        // TODO: perform cleaning at the end only for touched cells
         this.grid.enumerateAllCells(c => cleanNode(c as Node<T>));
 
-        let dirtyNodes: Node<T>[] = [];
-        let openHeap = new Heap<Node<T>>((a, b) => {
-            if (a.F < b.F) return -1;
-            if (a.F > b.F) return 1;
-            return 0;
-        });
+        let touchedNodes: Node<T>[] = [];
+        let openHeap = new BinaryHeap<Node<T>>(a => a.F);
 
         let result: number[] = [];
         let start: Node<T> = this.grid.getCell(startCellIndex) as Node<T>;
@@ -49,11 +46,11 @@ export class AStar<T> {
         start.G = 0;
         start.H = this.strategy.getHeuristic(start, finish);
         start.cellIndex = startCellIndex;
-        openHeap.add(start);    // 1
+        openHeap.push(start);    // 1
 
-        while (!openHeap.isEmpty()) {
+        while (openHeap.size() > 0) {
             // 2-a: Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
-            let currentNode = openHeap.removeRoot();
+            let currentNode = openHeap.pop();
 
             // End case -- result has been found, return the traced path.
             if (currentNode.cellIndex == finishCellIndex) {
@@ -76,8 +73,8 @@ export class AStar<T> {
 
                 // The g score is the shortest distance from start to current node.
                 // We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
-                var gScore = currentNode.G + G;
-                var beenVisited = neighbor.visited;
+                let gScore = currentNode.G + G;
+                let beenVisited = neighbor.visited;
 
                 if (!beenVisited || gScore < neighbor.G) {
                     // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
@@ -87,30 +84,26 @@ export class AStar<T> {
                     neighbor.G = gScore;
                     neighbor.F = neighbor.G + neighbor.H;
 
-                    dirtyNodes.push(neighbor);
+                    touchedNodes.push(neighbor);
 
                     if (!beenVisited) {
                         // Pushing to heap will put it in proper place based on the 'f' value.
-                        openHeap.add(neighbor);
+                        openHeap.push(neighbor);
                     } else {
                         // Already seen the node, but since it has been rescored we need to reorder it in the heap
-                        // TODO: rewrite in more efficient way
-                        let items = [];
-                        openHeap.forEach(t => { items.push(t); });
-                        openHeap.clear();
-                        items.forEach(i => { openHeap.add(i); });
+                        openHeap.rescoreElement(neighbor);
                     }
                 }
             });
         }
 
-        dirtyNodes.forEach(cell => cleanNode(cell as Node<T>));
+        touchedNodes.forEach(n => cleanNode(n as Node<T>));
         return result;
     }
 
-    pathTo(cell: Node<T>): number[] {
-        var curr = cell;
-        var path: number[] = [];
+    pathTo(node: Node<T>): number[] {
+        let curr = node;
+        let path: number[] = [];
         while (curr.parent) {
             path.unshift(curr.cellIndex);
             curr = curr.parent;
