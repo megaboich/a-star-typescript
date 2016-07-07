@@ -15,13 +15,13 @@ export class CoordinatesTranslator {
         this.spriteWidthThreeFourth = (spriteWidth / 4) * 3;
     }
 
-    setSpriteCoordinates(row: number, col: number, sprite: { x: number, y: number }): void {
+    setCoordinatesOfHexCell(row: number, col: number, coordinates: { x: number, y: number }): void {
         let vert_shift = (col % 2 != 0) ? this.spriteHeightHalf : 0;
-        sprite.x = this.leftMargin + col * this.spriteWidthThreeFourth;
-        sprite.y = this.topMargin + row * this.spriteHeight + vert_shift;
+        coordinates.x = this.leftMargin + col * this.spriteWidthThreeFourth;
+        coordinates.y = this.topMargin + row * this.spriteHeight + vert_shift;
     }
 
-    getSpriteIndexFromCoordinates(mousex: number, mousey: number): number {
+    getCellndexFromCoordinates(mousex: number, mousey: number): number {
         let x = mousex - this.leftMargin + this.spriteWidthHalf;
         let y = mousey - this.topMargin + this.spriteHeightHalf;
 
@@ -47,14 +47,14 @@ export class CoordinatesTranslator {
         }
     }
 
-    checkIfInsideHex(n: number, col: number, row: number, mousex: number, mousey: number): { col: number, row: number } {
+    private checkIfInsideHex(n: number, col: number, row: number, mousex: number, mousey: number): { col: number, row: number } {
         if (col < 0 || row < 0 || col >= this.gridWidth || row >= this.gridHeight) {
             return null;
         }
 
         //get coords of hex
         let coords = { x: undefined, y: undefined };
-        this.setSpriteCoordinates(row, col, coords);
+        this.setCoordinatesOfHexCell(row, col, coords);
 
         //normalize coords
         let x = mousex - coords.x;
@@ -64,7 +64,7 @@ export class CoordinatesTranslator {
         x = x / this.spriteWidthHalf;
         y = y / this.spriteHeightHalf;
 
-        if (this.isInsideNormalizedHexagon(x, y)) {
+        if (this.checkIfInsideHexNormalized(x, y)) {
             //console.log('check ok - ' + n);
             return {
                 col: col,
@@ -75,7 +75,7 @@ export class CoordinatesTranslator {
         return null;
     }
 
-    isInsideNormalizedHexagon(x: number, y: number): boolean {
+    private checkIfInsideHexNormalized(x: number, y: number): boolean {
         // Check length (squared) against inner and outer radius
         let l2 = x * x + y * y;
         if (l2 > 1.0) return false;

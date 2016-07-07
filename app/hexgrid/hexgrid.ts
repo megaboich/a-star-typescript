@@ -36,14 +36,6 @@ export class HexGrid<T> {
         }
     }
 
-    setCellValue(cellIndex: number, value: T): void {
-        this.data[cellIndex].value = value;
-    }
-
-    getCellValue(cellIndex: number): T {
-        return this.data[cellIndex].value;
-    }
-
     getCell(cellIndex: number): Cell<T> {
         return this.data[cellIndex];
     }
@@ -54,13 +46,7 @@ export class HexGrid<T> {
         });
     }
 
-    enumerateAllValues(func: (value: T, cellIndex: number) => void) {
-        this.data.forEach((cell, index) => {
-            func(cell.value, index);
-        });
-    }
-
-    getCellNeighborIndex(cellIndex: number, direction: HexDirection): number {
+    getNeighborCellIndex(cellIndex: number, direction: HexDirection): number {
         let row = this.data[cellIndex].row;
         let col = this.data[cellIndex].col;
         let oddcol = col % 2 == 0;

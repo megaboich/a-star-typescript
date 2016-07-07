@@ -9,13 +9,8 @@ export enum TerrainType {
     Mountain
 }
 
-export class Persona {
-    name: string;
-}
-
 export class GridTile {
     terrainType: TerrainType;
-    persona: Persona;
 }
 
 export class Game {

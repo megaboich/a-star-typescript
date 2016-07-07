@@ -1,29 +1,32 @@
 import { AnimationsManager } from './pixi-ext/pixi-animation-manager'
-import { AnimationQueue } from './pixi-ext/./pixi-animation-combined'
-import { AnimationMove, EntityPosition } from './pixi-ext/./pixi-animation-move'
-import { AnimationScale } from './pixi-ext/./pixi-animation-scale'
-import { AnimationFade } from './pixi-ext/./pixi-animation-fade'
-import { AnimationDelay } from './pixi-ext/./pixi-animation-delay'
+import { AnimationQueue } from './pixi-ext/pixi-animation-combined'
+import { AnimationMove, EntityPosition } from './pixi-ext/pixi-animation-move'
+import { AnimationScale } from './pixi-ext/pixi-animation-scale'
+import { AnimationFade } from './pixi-ext/pixi-animation-fade'
+import { AnimationDelay } from './pixi-ext/pixi-animation-delay'
+import { HighligtedSprite } from './pixi-ext/pixi-highlighted-sprite'
 
 import { Game, TerrainType, GridTile } from '../game/game'
+import { TerrainPathFindingStrategy } from '../game/terrain-pathfinding-strategy'
 import { RenderHelper } from './pixi-game-render-helper'
 import { AStar } from '../hexgrid/a-star'
 
 export class Render {
-    private stage: PIXI.Container;
-    private fpsText: PIXI.Text;
-    private staticRoot: PIXI.Container = null;
     private game: Game;
     private animationsManager: AnimationsManager;
     private renderHelper: RenderHelper;
+
+    private stage: PIXI.Container;
+    private fpsText: PIXI.Text;
+    private staticRoot: PIXI.Container = null;
+    private brightenFilter: PIXI.filters.ColorMatrixFilter;
+    private terrainSprites: HighligtedSprite[];
 
     private hoveredTerrainIndex: number;
     private startTerrainIndex: number;
     private finishTerrainIndex: number;
     private startOrFinishFlag: boolean = true;
-    private brightenFilter: PIXI.filters.ColorMatrixFilter;
-
-    private terrainSprites: PIXI.Sprite[];
+    private currentPathIndexes: number[];
 
     constructor(document: Document, game: Game) {
         this.renderHelper = new RenderHelper(game);
@@ -77,9 +80,9 @@ export class Render {
 
         this.terrainSprites = [];
         this.renderHelper.buildTerrainSprites(this.game, (sprite) => {
-            sprite.alpha = 0.5;
+            sprite.alpha = 0.6;
             this.staticRoot.addChild(sprite);
-            this.terrainSprites.push(sprite);
+            this.terrainSprites.push(HighligtedSprite.fromSprite(sprite));
         });
 
         this.staticRoot.interactive = true;
@@ -93,7 +96,7 @@ export class Render {
 
     onMouseDown(event) {
         let data: PIXI.interaction.InteractionData = event.data;
-        let terrainIndex = this.renderHelper.coordinatesTranslator.getSpriteIndexFromCoordinates(data.global.x, data.global.y);
+        let terrainIndex = this.renderHelper.coordinatesTranslator.getCellndexFromCoordinates(data.global.x, data.global.y);
 
         if (terrainIndex < 0 || terrainIndex == this.startTerrainIndex || terrainIndex == this.finishTerrainIndex) {
             return;
@@ -101,45 +104,45 @@ export class Render {
 
         if (this.startOrFinishFlag) {
             if (this.startTerrainIndex >= 0) {
-                let oldStartSprite = this.terrainSprites[this.startTerrainIndex];
-                oldStartSprite.tint = 0xFFFFFF;
+                this.terrainSprites[this.startTerrainIndex].removeHighlighting({ tintColor: true });
             }
             this.startTerrainIndex = terrainIndex;
-            let newStartSprite = this.terrainSprites[this.startTerrainIndex];
-            newStartSprite.tint = 0x0fd80f;
-
-
+            this.terrainSprites[this.startTerrainIndex].setHighlighting({ tintColor: 0x0fd80f });
         } else {
             if (this.finishTerrainIndex >= 0) {
-                let oldFinishSprite = this.terrainSprites[this.finishTerrainIndex];
-                oldFinishSprite.tint = 0xFFFFFF;
+                this.terrainSprites[this.finishTerrainIndex].removeHighlighting({ tintColor: true });
             }
             this.finishTerrainIndex = terrainIndex;
-            let newFinishSprite = this.terrainSprites[this.finishTerrainIndex];
-            newFinishSprite.tint = 0xffa30f;
+            this.terrainSprites[this.finishTerrainIndex].setHighlighting({ tintColor: 0xffa30f });
         }
 
         this.startOrFinishFlag = !this.startOrFinishFlag;
 
         if (this.startTerrainIndex >= 0 && this.finishTerrainIndex >= 0) {
-            let astar = new AStar(this.game.grid);
-            var path = astar.GetPath(this.startTerrainIndex, this.finishTerrainIndex);
-            console.log('path: ', path);
+            let strategy = new TerrainPathFindingStrategy(this.game.grid);
+            let astar = new AStar(this.game.grid, strategy);
+            let path = astar.GetPath(this.startTerrainIndex, this.finishTerrainIndex);
+
+            if (this.currentPathIndexes) {
+                this.currentPathIndexes.forEach(i => this.terrainSprites[i].removeHighlighting({ alpha: true }));
+            }
+            this.currentPathIndexes = path;
+            this.currentPathIndexes.forEach(i => this.terrainSprites[i].setHighlighting({ alpha: 1 }));
+
+            console.log('path: ', this.currentPathIndexes);
         }
     }
 
     onMouseMove(event) {
         let data: PIXI.interaction.InteractionData = event.data;
-        let terrainIndex = this.renderHelper.coordinatesTranslator.getSpriteIndexFromCoordinates(data.global.x, data.global.y);
+        let terrainIndex = this.renderHelper.coordinatesTranslator.getCellndexFromCoordinates(data.global.x, data.global.y);
 
         if (terrainIndex >= 0 && this.hoveredTerrainIndex != terrainIndex) {
             if (this.hoveredTerrainIndex >= 0) {
-                let oldHoveredSprite = this.terrainSprites[this.hoveredTerrainIndex];
-                oldHoveredSprite.filters = null;
+                this.terrainSprites[this.hoveredTerrainIndex].removeHighlighting({ filters: true });
             }
             this.hoveredTerrainIndex = terrainIndex;
-            let hoveredSprite = this.terrainSprites[this.hoveredTerrainIndex];
-            hoveredSprite.filters = [this.brightenFilter];
+            this.terrainSprites[this.hoveredTerrainIndex].setHighlighting({ filters: [this.brightenFilter] });
         }
     }
 

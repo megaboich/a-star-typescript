@@ -43,9 +43,9 @@ export class RenderHelper {
         let index = 0;
         for (let irow = 0; irow < game.grid.height; ++irow) {
             for (let icol = 0; icol < game.grid.width; ++icol) {
-                let c = game.grid.getCellValue(index);
+                let c = game.grid.getCell(index).value;
                 let terrainSprite = this.getTerrainSprite(c.terrainType);
-                this.coordinatesTranslator.setSpriteCoordinates(irow, icol, terrainSprite.position);
+                this.coordinatesTranslator.setCoordinatesOfHexCell(irow, icol, terrainSprite.position);
                 func(terrainSprite);
                 ++index;
             }
