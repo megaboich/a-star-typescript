@@ -10,11 +10,10 @@ describe(`Hex Grid`, () => {
     it(`Create and expect to have correct number of cells`, () => {
         let grid = new HexGrid<string>(2, 2, (index) => index.toString());
 
-        let arr: number[] = [];
-        let f = (cell, index) => {
-            arr.push(cell)
-        };
-        grid.enumerateAllCells(f);
+        let arr: string[] = [];
+        grid.enumerateAllValues((val, index) => {
+            arr.push(val);
+        });
         expect(arr).toEqual(['0', '1', '2', '3']);
     })
 
