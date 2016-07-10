@@ -1,8 +1,8 @@
-import { HexGrid, Cell, HexDirection } from '../hexgrid/hexgrid'
-import { IPathFindingStrategy } from '../hexgrid/a-star'
-import { TerrainType, GridTile } from './game'
+import { HexGrid, HexCell, HexDirection } from '../helpers/hexgrid/index'
+import { IPathFindingStrategy } from '../helpers/a-star'
+import { TerrainType, TerrainCell } from './game'
 
-export class TerrainPathFindingStrategy implements IPathFindingStrategy<GridTile> {
+export class TerrainPathFindingStrategy implements IPathFindingStrategy<HexCell<TerrainCell>> {
     private directions: HexDirection[] = [
         HexDirection.N,
         HexDirection.NE,
@@ -12,20 +12,23 @@ export class TerrainPathFindingStrategy implements IPathFindingStrategy<GridTile
         HexDirection.SW,
     ];
 
-    constructor(private grid: HexGrid<GridTile>) {
+    constructor(private grid: HexGrid<TerrainCell>) {
     }
 
-    iterateOverNeighbors(cellIndex: number, func: (neighborCell: Cell<GridTile>, neighborCellIndex: number, G: number) => void): void {
+    areWeThereYet(currentNode: HexCell<TerrainCell>, finishNode: HexCell<TerrainCell>): boolean {
+        return currentNode.cellIndex == finishNode.cellIndex;
+    }
+
+    iterateOverNeighbors(currentCell: HexCell<TerrainCell>, func: (neighborCell: HexCell<TerrainCell>, G: number) => void): void {
         for (var i = 0; i < this.directions.length; ++i) {
-            var neighborCellIndex = this.grid.getNeighborCellIndex(cellIndex, this.directions[i]);
-            if (neighborCellIndex < 0) {
+            var neighbor = this.grid.getNeighbor(currentCell, this.directions[i]);
+            if (!neighbor) {
                 continue;
             }
 
             // check the terrain type and assign different value
             let G: number;
-            let cell = this.grid.getCell(neighborCellIndex);
-            switch (cell.value.terrainType) {
+            switch (neighbor.value.terrainType) {
                 case TerrainType.Desert:
                     G = 25;
                     break;
@@ -43,11 +46,11 @@ export class TerrainPathFindingStrategy implements IPathFindingStrategy<GridTile
                     break;
             }
 
-            func(cell, neighborCellIndex, G);
+            func(neighbor, G);
         }
     }
 
-    getHeuristic(c1: Cell<GridTile>, c2: Cell<GridTile>): number {
+    getHeuristic(c1: HexCell<TerrainCell>, c2: HexCell<TerrainCell>): number {
         //return 10 * (Math.abs(c1.row - c2.row) + Math.abs(c1.col - c2.col));
         //return 5 * Math.sqrt((Math.pow(Math.abs(c1.row - c2.row), 2) + Math.pow(Math.abs(c1.col - c2.col), 2)));
         return 1;

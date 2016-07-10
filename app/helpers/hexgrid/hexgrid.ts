@@ -7,28 +7,31 @@ export enum HexDirection {
     NW
 }
 
-export class Cell<T>{
+export class HexCell<T>{
     value: T;
     row: number;
     col: number;
+    cellIndex: number;
 }
 
 export class HexGrid<T> {
     public width: number;
     public height: number;
     private datalen: number;
-    private data: Cell<T>[];
+    private data: HexCell<T>[];
 
     constructor(width: number, height: number, cellInitializer: (cellIndex: number) => T) {
         this.width = width;
         this.height = height;
         this.datalen = width * height;
-        this.data = new Array<Cell<T>>(this.datalen);
+        this.data = new Array<HexCell<T>>(this.datalen);
+        let cellIndex = 0;
         for (let irow = 0, index = 0; irow < this.height; irow++) {
             for (let icol = 0; icol < this.width; icol++) {
                 this.data[index] = {
                     col: icol,
                     row: irow,
+                    cellIndex: cellIndex++,
                     value: cellInitializer(index)
                 };
                 ++index;
@@ -36,19 +39,19 @@ export class HexGrid<T> {
         }
     }
 
-    getCell(cellIndex: number): Cell<T> {
+    getCell(cellIndex: number): HexCell<T> {
         return this.data[cellIndex];
     }
 
-    enumerateAllCells(func: (cell: Cell<T>, cellIndex: number) => void) {
+    enumerateAllCells(func: (cell: HexCell<T>, cellIndex: number) => void) {
         this.data.forEach((cell, index) => {
             func(cell, index);
         });
     }
 
-    getNeighborCellIndex(cellIndex: number, direction: HexDirection): number {
-        let row = this.data[cellIndex].row;
-        let col = this.data[cellIndex].col;
+    getNeighbor(cell: HexCell<T>, direction: HexDirection): HexCell<T> {
+        let row = this.data[cell.cellIndex].row;
+        let col = this.data[cell.cellIndex].col;
         let oddcol = col % 2 == 0;
         let newrow: number, newcol: number;
         switch (direction) {
@@ -99,9 +102,9 @@ export class HexGrid<T> {
         }
 
         if (newcol >= 0 && newcol < this.width && newrow >= 0 && newrow < this.height) {
-            return this.getCellIndex(newrow, newcol);
+            return this.data[this.getCellIndex(newrow, newcol)];
         }
-        return -1;
+        return null;
     }
 
     getCellIndex(row: number, col: number): number {

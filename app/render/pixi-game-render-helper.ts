@@ -1,5 +1,5 @@
 import { Game, TerrainType } from '../game/game'
-import { CoordinatesTranslator } from '../hexgrid/coordinates-translator'
+import { HexGridCoordinatesTranslator } from '../helpers/hexgrid/index'
 
 export class RenderHelper {
     TerrainTextures = {
@@ -10,10 +10,10 @@ export class RenderHelper {
         Mouintain: PIXI.Texture.fromImage(require('../assets/terrain/ore.gif'))
     }
 
-    coordinatesTranslator: CoordinatesTranslator;
+    coordinatesTranslator: HexGridCoordinatesTranslator;
 
     constructor(private game: Game) {
-        this.coordinatesTranslator = new CoordinatesTranslator(100, 60, 64, 54, game.grid.width, game.grid.height);
+        this.coordinatesTranslator = new HexGridCoordinatesTranslator(100, 60, 64, 54, game.grid.width, game.grid.height);
     }
 
     public getTerrainTexture(terrainType: TerrainType): PIXI.Texture {

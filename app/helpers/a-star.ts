@@ -1,51 +1,41 @@
-import { HexGrid, HexDirection, Cell } from './hexgrid'
-import { GridTile, TerrainType } from '../game/game'
 import { BinaryHeap } from '../helpers/binary-heap';
 
-class Node<T> extends Cell<T> {
+interface Node {
     F: number;
     G: number;
     H: number;
-    cellIndex: number;
     visited: boolean;
     closed: boolean;
-    parent: Node<T>;
+    parent: Node;
 }
 
-function cleanNode<T>(t: Node<T>) {
+function cleanNode<T>(t: Node) {
     delete t.F;
     delete t.G;
     delete t.H;
-    delete t.cellIndex;
     delete t.visited;
     delete t.closed;
     delete t.parent;
 }
 
 export interface IPathFindingStrategy<T> {
-    iterateOverNeighbors(cellIndex: number, func: (neighborCell: Cell<T>, neighborCellIndex: number, G: number) => void): void;
-    getHeuristic(c1: Cell<T>, c2: Cell<T>): number;
+    iterateOverNeighbors(currentNode: T, func: (neighbor: T, G: number) => void): void;
+    getHeuristic(node1: T, node2: T): number;
+    areWeThereYet(currentNode: T, finishNode: T): boolean;
 }
 
 export class AStar<T> {
-    constructor(private grid: HexGrid<T>,
-        private strategy: IPathFindingStrategy<T>) {
+    constructor(private strategy: IPathFindingStrategy<T>) {
     }
 
-    public GetPath(startCellIndex: number, finishCellIndex: number): number[] {
-        // TODO: perform cleaning at the end only for touched cells
-        this.grid.enumerateAllCells(c => cleanNode(c as Node<T>));
-
-        let touchedNodes: Node<T>[] = [];
-        let openHeap = new BinaryHeap<Node<T>>(a => a.F);
-
-        let result: number[] = [];
-        let start: Node<T> = this.grid.getCell(startCellIndex) as Node<T>;
-        let finish = this.grid.getCell(finishCellIndex);
+    public GetPath(startNode: T, finishNode: T): T[] {
+        let openHeap = new BinaryHeap<Node>(a => a.F);
+        let result: T[] = [];
+        let start: Node = startNode as any as Node;
+        let touchedNodes: Node[] = [start];
         start.F = 0;
         start.G = 0;
-        start.H = this.strategy.getHeuristic(start, finish);
-        start.cellIndex = startCellIndex;
+        start.H = this.strategy.getHeuristic(startNode, finishNode);
         openHeap.push(start);    // 1
 
         while (openHeap.size() > 0) {
@@ -53,7 +43,7 @@ export class AStar<T> {
             let currentNode = openHeap.pop();
 
             // End case -- result has been found, return the traced path.
-            if (currentNode.cellIndex == finishCellIndex) {
+            if (this.strategy.areWeThereYet(currentNode as any as T, finishNode)) {
                 result = this.pathTo(currentNode);
                 break;
             }
@@ -62,14 +52,13 @@ export class AStar<T> {
             currentNode.closed = true;
 
             // Walk over neighbours
-            this.strategy.iterateOverNeighbors(currentNode.cellIndex, (n, neighborIndex, G) => { //2-c
-                let neighbor = n as Node<T>;
+            this.strategy.iterateOverNeighbors(currentNode as any as T, (n, G) => { //2-c
+                let neighbor = n as any as Node;
 
                 if (neighbor.closed) {
                     // Not a valid node to process, skip to next neighbor.
                     return;
                 }
-                neighbor.cellIndex = neighborIndex;
 
                 // The g score is the shortest distance from start to current node.
                 // We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
@@ -80,7 +69,7 @@ export class AStar<T> {
                     // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
                     neighbor.visited = true;
                     neighbor.parent = currentNode;
-                    neighbor.H = neighbor.H || this.strategy.getHeuristic(neighbor, finish);
+                    neighbor.H = neighbor.H || this.strategy.getHeuristic(neighbor as any as T, finishNode);
                     neighbor.G = gScore;
                     neighbor.F = neighbor.G + neighbor.H;
 
@@ -97,15 +86,15 @@ export class AStar<T> {
             });
         }
 
-        touchedNodes.forEach(n => cleanNode(n as Node<T>));
+        touchedNodes.forEach(cleanNode);
         return result;
     }
 
-    pathTo(node: Node<T>): number[] {
+    pathTo(node: Node): T[] {
         let curr = node;
-        let path: number[] = [];
+        let path: T[] = [];
         while (curr.parent) {
-            path.unshift(curr.cellIndex);
+            path.unshift(curr as any as T);
             curr = curr.parent;
         }
         return path;

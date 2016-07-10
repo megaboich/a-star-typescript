@@ -8,8 +8,9 @@ let render: Render;
 
 function Run() {
     let random = new DefaultRandom();
-    game = new Game(random);
+    game = new Game(random, 10, 10);
     render = new Render(document, game);
+
     console.log(game);
 }
 

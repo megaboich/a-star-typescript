@@ -1,4 +1,4 @@
-export class CoordinatesTranslator {
+export class HexGridCoordinatesTranslator {
     spriteHeightHalf: number;
     spriteWidthHalf: number;
     spriteWidthThreeFourth: number;
