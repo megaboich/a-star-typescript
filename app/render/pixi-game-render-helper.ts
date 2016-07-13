@@ -33,7 +33,7 @@ export class RenderHelper {
 
     public getTerrainSprite(terrainType: TerrainType): PIXI.Sprite {
         let texture = this.getTerrainTexture(terrainType);
-        var terrainSprite = new PIXI.Sprite(texture);
+        let terrainSprite = new PIXI.Sprite(texture);
         terrainSprite.anchor.x = 0.5;
         terrainSprite.anchor.y = 0.5;
         return terrainSprite;

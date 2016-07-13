@@ -33,9 +33,9 @@ describe(`Hex Grid`, () => {
     })
 
     function checkNeighbor<T>(grid: HexGrid<T>, index: number, dir: HexDirection, expectedIndex: number) {
-        var neighbor = grid.getNeighbor(grid.getCell(index), dir);
+        let neighbor = grid.getNeighbor(grid.getCell(index), dir);
         if (expectedIndex >= 0) {
-            var expeced = grid.getCell(expectedIndex);
+            let expeced = grid.getCell(expectedIndex);
             expect(neighbor).toBe(expeced);
         }
         else {

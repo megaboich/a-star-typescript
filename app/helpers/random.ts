@@ -14,9 +14,9 @@ export class RandomHelper {
 
 
     static GetRandColor(): number {
-        var r = this.GetRandomInt(120, 255);
-        var g = this.GetRandomInt(120, 255);
-        var b = this.GetRandomInt(120, 255);
+        let r = this.GetRandomInt(120, 255);
+        let g = this.GetRandomInt(120, 255);
+        let b = this.GetRandomInt(120, 255);
         return b + 256 * g + 256 * 256 * r;
     }
 }

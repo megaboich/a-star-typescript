@@ -20,8 +20,8 @@ export class TerrainPathFindingStrategy implements IPathFindingStrategy<HexCell<
     }
 
     iterateOverNeighbors(currentCell: HexCell<TerrainCell>, func: (neighborCell: HexCell<TerrainCell>, G: number) => void): void {
-        for (var i = 0; i < this.directions.length; ++i) {
-            var neighbor = this.grid.getNeighbor(currentCell, this.directions[i]);
+        for (let i = 0; i < this.directions.length; ++i) {
+            let neighbor = this.grid.getNeighbor(currentCell, this.directions[i]);
             if (!neighbor) {
                 continue;
             }

@@ -31,6 +31,12 @@ module.exports = {
     externals: {
     },
     module: {
+        preLoaders: [
+            {
+                test: /\.ts$/,
+                loader: "tslint"
+            }
+        ],
         loaders: [
             // this is required to apply typescript compilation
             { test: /\.ts$/, loader: 'ts' },

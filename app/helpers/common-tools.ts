@@ -1,6 +1,6 @@
 export class CommonTools {
     public static ConsoleLog(message: string, data: Array<any>, isBold: boolean = false, color: string = null) {
-        var style = '';
+        let style = '';
         if (isBold) {
             style += 'font-weight:bold; '
         }
