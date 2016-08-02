@@ -30,7 +30,7 @@ export class Render {
         this.game = game;
 
         (PIXI.utils as any)._saidHello = true;
-        let renderer = PIXI.autoDetectRenderer(1200, 630, { backgroundColor: 0xffffff });
+        let renderer = PIXI.autoDetectRenderer(1200, 720, { backgroundColor: 0xffffff });
         document.body.appendChild(renderer.view);
 
         // create the root of the scene graph
@@ -49,7 +49,7 @@ export class Render {
 
         this.game.pathIndexesSubject.subscribe(change => {
             change.oldPathIndexes.forEach(i => this.terrainSprites[i].removeHighlighting({ alpha: true }));
-            change.currentPathIndexes.forEach(i => this.terrainSprites[i].setHighlighting({ alpha: 1 }));
+            change.currentPathIndexes.forEach(i => this.terrainSprites[i].setHighlighting({ alpha: 0.9 }));
         });
         this.game.startIndexSubject.subscribe(change => {
             if (change.oldIndex >= 0) {
@@ -81,7 +81,7 @@ export class Render {
 
         this.terrainSprites = [];
         this.renderHelper.buildTerrainSprites(this.game, (sprite) => {
-            sprite.alpha = 0.6;
+            //sprite.alpha = 0.8;
             this.terrainContainer.addChild(sprite);
             this.terrainSprites.push(HighligtedSprite.fromSprite(sprite));
         });
@@ -101,9 +101,14 @@ export class Render {
         this.brightenFilter.brightness(1.2);
     }
 
-    updateCellTexture(cellIndex: number) {
+    updateCell(cellIndex: number) {
         let cell = this.game.grid.getCell(cellIndex);
-        this.terrainSprites[cellIndex].texture = this.renderHelper.getTerrainTexture(cell.value.terrainType);
+        let oldSprite = this.terrainSprites[cellIndex];
+        oldSprite.parent.removeChild(oldSprite);
+        oldSprite.destroy();
+        let newSprite = HighligtedSprite.fromSprite(this.renderHelper.buildTerrainSprite(cell));
+        this.terrainSprites[cellIndex] = newSprite;
+        this.terrainContainer.addChild(newSprite);
     }
 
     onMouseDown(event) {

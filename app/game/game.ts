@@ -63,7 +63,7 @@ export class Game {
     generateGameField(width: number, height: number): HexGrid<TerrainCell> {
         let grid = new HexGrid<TerrainCell>(width, height, (index) => {
             let tile = new TerrainCell();
-            let rnd = this.random.GetRandomNumber(100);
+            let rnd = this.random.GetRandomNumber(30);
             switch (rnd) {
                 case 0:
                     tile.terrainType = TerrainType.Mountain;

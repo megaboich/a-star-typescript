@@ -1,19 +1,38 @@
-import { Game, TerrainType } from '../game/game'
-import { HexGridCoordinatesTranslator } from '../helpers/hexgrid/index'
+import { Game, TerrainType, TerrainCell } from '../game/game'
+import { HexGridCoordinatesTranslator, HexCell } from '../helpers/hexgrid/index'
 
 export class RenderHelper {
     TerrainTextures = {
-        Water: PIXI.Texture.fromImage(require('../assets/terrain/water.gif')),
-        Wood: PIXI.Texture.fromImage(require('../assets/terrain/wood.gif')),
-        Grass: PIXI.Texture.fromImage(require('../assets/terrain/grass.gif')),
-        Desert: PIXI.Texture.fromImage(require('../assets/terrain/desert.gif')),
-        Mouintain: PIXI.Texture.fromImage(require('../assets/terrain/ore.gif'))
+        Wood: PIXI.Texture.fromImage(require('../assets/terrain/forested-mixed-summer-hills-tile.png')),
+        Grass: PIXI.Texture.fromImage(require('../assets/terrain/semi-dry.png')),
+        Desert: PIXI.Texture.fromImage(require('../assets/terrain/desert.png')),
+        Mouintain: PIXI.Texture.fromImage(require('../assets/terrain/mountains-dry-tile.png')),
+
+        WaterAnimation: [
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A01.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A02.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A03.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A04.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A05.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A06.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A07.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A08.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A09.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A10.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A11.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A12.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A13.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A14.png')),
+            PIXI.Texture.fromImage(require('../assets/terrain/water/coast-tropical-A15.png')),
+        ]
     }
 
     coordinatesTranslator: HexGridCoordinatesTranslator;
+    sprite_vertical_scale: number;
 
     constructor(private game: Game) {
-        this.coordinatesTranslator = new HexGridCoordinatesTranslator(100, 60, 64, 54, game.grid.width, game.grid.height);
+        this.coordinatesTranslator = new HexGridCoordinatesTranslator(100, 60, 72, 62, game.grid.width, game.grid.height);
+        this.sprite_vertical_scale = 0.88;
     }
 
     public getTerrainTexture(terrainType: TerrainType): PIXI.Texture {
@@ -26,16 +45,28 @@ export class RenderHelper {
                 return this.TerrainTextures.Mouintain;
             case TerrainType.Tree:
                 return this.TerrainTextures.Wood;
-            case TerrainType.Water:
-                return this.TerrainTextures.Water;
+            default:
+                throw 'Wrong terrain texture';
         }
     }
 
     public getTerrainSprite(terrainType: TerrainType): PIXI.Sprite {
-        let texture = this.getTerrainTexture(terrainType);
-        let terrainSprite = new PIXI.Sprite(texture);
+        let terrainSprite: PIXI.Sprite;
+        switch (terrainType) {
+            case TerrainType.Water:
+                let movie = new PIXI.extras.MovieClip(this.TerrainTextures.WaterAnimation);
+                movie.animationSpeed = 0.1;
+                movie.play();
+                terrainSprite = movie;
+                break;
+            default:
+                let texture = this.getTerrainTexture(terrainType);
+                terrainSprite = new PIXI.Sprite(texture);
+                break;
+        }
         terrainSprite.anchor.x = 0.5;
         terrainSprite.anchor.y = 0.5;
+        terrainSprite.scale.y = this.sprite_vertical_scale;
         return terrainSprite;
     }
 
@@ -43,13 +74,18 @@ export class RenderHelper {
         let index = 0;
         for (let irow = 0; irow < game.grid.height; ++irow) {
             for (let icol = 0; icol < game.grid.width; ++icol) {
-                let c = game.grid.getCell(index).value;
-                let terrainSprite = this.getTerrainSprite(c.terrainType);
-                this.coordinatesTranslator.setCoordinatesOfHexCell(irow, icol, terrainSprite.position);
-                func(terrainSprite);
+                let c = game.grid.getCell(index);
+                let sprite = this.buildTerrainSprite(c);
+                func(sprite);
                 ++index;
             }
         }
+    }
+
+    public buildTerrainSprite(cell: HexCell<TerrainCell>): PIXI.Sprite {
+        let terrainSprite = this.getTerrainSprite(cell.value.terrainType);
+        this.coordinatesTranslator.setCoordinatesOfHexCell(cell.row, cell.col, terrainSprite.position);
+        return terrainSprite;
     }
 }
 
