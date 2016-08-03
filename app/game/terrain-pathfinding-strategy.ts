@@ -51,8 +51,9 @@ export class TerrainPathFindingStrategy implements IPathFindingStrategy<HexCell<
     }
 
     getHeuristic(c1: HexCell<TerrainCell>, c2: HexCell<TerrainCell>): number {
-        //return 10 * (Math.abs(c1.row - c2.row) + Math.abs(c1.col - c2.col));
-        //return 5 * Math.sqrt((Math.pow(Math.abs(c1.row - c2.row), 2) + Math.pow(Math.abs(c1.col - c2.col), 2)));
-        return 1;
+        let dy = c1.row - c2.row;
+        let dx = c1.col - c2.col;
+        return Math.sqrt(dx * dx + dy * dy) * 10;
+        //return 1;
     }
 } 
