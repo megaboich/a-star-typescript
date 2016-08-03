@@ -14,7 +14,7 @@ function Run() {
     render.onCellClick.subscribe(cellIndex => {
         let cell = game.grid.getCell(cellIndex).value;
         cell.terrainType = game.getNextTerrainType(cell.terrainType);
-        render.updateCell(cellIndex);
+        render.updateCellTerrain(cellIndex);
         game.buildPath();
     });
 

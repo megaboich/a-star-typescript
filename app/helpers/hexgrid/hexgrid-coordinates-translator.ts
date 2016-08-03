@@ -47,6 +47,17 @@ export class HexGridCoordinatesTranslator {
         }
     }
 
+    calculateRotationDirectionFromOneCellToAnother(startCellRow: number, startCellCol: number, finishCellRow: number, finishCellCol: number): number {
+        let startCoordinates = { x: 0, y: 0 };
+        let finishCoordinates = { x: 0, y: 0 };
+        this.setCoordinatesOfHexCell(startCellRow, startCellCol, startCoordinates);
+        this.setCoordinatesOfHexCell(finishCellRow, finishCellCol, finishCoordinates);
+        let dx = startCoordinates.x - finishCoordinates.x;
+        let dy = startCoordinates.y - finishCoordinates.y;
+        let angle = Math.atan2(dy, dx) + Math.PI;
+        return angle;
+    }
+
     private checkIfInsideHex(n: number, col: number, row: number, mousex: number, mousey: number): { col: number, row: number } {
         if (col < 0 || row < 0 || col >= this.gridWidth || row >= this.gridHeight) {
             return null;

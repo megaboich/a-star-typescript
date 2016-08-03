@@ -27,6 +27,11 @@ export class RenderHelper {
         ]
     }
 
+    MiscTextures = {
+        SmallArrow: PIXI.Texture.fromImage(require('../assets/arrow-yellow.png')),
+        Stub: PIXI.Texture.fromImage(require('../assets/stub.png')),
+    }
+
     coordinatesTranslator: HexGridCoordinatesTranslator;
     sprite_vertical_scale: number;
 
@@ -64,6 +69,7 @@ export class RenderHelper {
                 terrainSprite = new PIXI.Sprite(texture);
                 break;
         }
+        //terrainSprite = new PIXI.Sprite(this.MiscTextures.Stub);
         terrainSprite.anchor.x = 0.5;
         terrainSprite.anchor.y = 0.5;
         terrainSprite.scale.y = this.sprite_vertical_scale;
@@ -86,6 +92,18 @@ export class RenderHelper {
         let terrainSprite = this.getTerrainSprite(cell.value.terrainType);
         this.coordinatesTranslator.setCoordinatesOfHexCell(cell.row, cell.col, terrainSprite.position);
         return terrainSprite;
+    }
+
+    public buildPathHighlightSprite(cellIndex: number, nextCellIndex: number): PIXI.Sprite {
+        let cell = this.game.grid.getCell(cellIndex);
+        let nextCell = this.game.grid.getCell(nextCellIndex);
+        let angle = this.coordinatesTranslator.calculateRotationDirectionFromOneCellToAnother(cell.row, cell.col, nextCell.row, nextCell.col);
+        let sprite = new PIXI.Sprite(this.MiscTextures.SmallArrow);
+        sprite.rotation = angle;
+        sprite.anchor.x = 0.5;
+        sprite.anchor.y = 0.5;
+        this.coordinatesTranslator.setCoordinatesOfHexCell(cell.row, cell.col, sprite.position);
+        return sprite;
     }
 }
 

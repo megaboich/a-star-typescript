@@ -15,7 +15,8 @@ export class Render {
     private fpsText: PIXI.Text;
     private terrainContainer: PIXI.Container = null;
     private brightenFilter: PIXI.filters.ColorMatrixFilter;
-    private terrainSprites: HighligtedSprite[];
+    private terrainSprites: HighligtedSprite[] = [];
+    private currentPathSprites: PIXI.Sprite[] = [];
 
     private hoveredTerrainIndex: number;
     private dragStartCell: boolean;
@@ -47,10 +48,6 @@ export class Render {
         // create all graphic objects        
         this.buildGraphics();
 
-        this.game.pathIndexesSubject.subscribe(change => {
-            change.oldPathIndexes.forEach(i => this.terrainSprites[i].removeHighlighting({ alpha: true }));
-            change.currentPathIndexes.forEach(i => this.terrainSprites[i].setHighlighting({ alpha: 0.9 }));
-        });
         this.game.startIndexSubject.subscribe(change => {
             if (change.oldIndex >= 0) {
                 this.terrainSprites[change.oldIndex].removeHighlighting({ tintColor: true });
@@ -62,6 +59,21 @@ export class Render {
                 this.terrainSprites[change.oldIndex].removeHighlighting({ tintColor: true });
             }
             this.terrainSprites[change.currentIndex].setHighlighting({ tintColor: FINISH_TINT_COLOR });
+        });
+
+        this.game.pathIndexesSubject.subscribe(change => {
+            this.currentPathSprites.forEach(sprite => {
+                sprite.parent.removeChild(sprite);
+                sprite.destroy();
+            });
+            this.currentPathSprites = [];
+            for (let i = 0; i < change.currentPathIndexes.length - 1; ++i) {
+                let index = change.currentPathIndexes[i];
+                let nextIndex = change.currentPathIndexes[i + 1];
+                let sprite = this.renderHelper.buildPathHighlightSprite(index, nextIndex);
+                this.currentPathSprites.push(sprite);
+                this.terrainContainer.addChild(sprite);
+            }
         });
     }
 
@@ -101,7 +113,7 @@ export class Render {
         this.brightenFilter.brightness(1.2);
     }
 
-    updateCell(cellIndex: number) {
+    updateCellTerrain(cellIndex: number) {
         let cell = this.game.grid.getCell(cellIndex);
         let oldSprite = this.terrainSprites[cellIndex];
         oldSprite.parent.removeChild(oldSprite);
