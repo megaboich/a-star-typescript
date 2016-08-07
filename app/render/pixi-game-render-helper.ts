@@ -36,8 +36,15 @@ export class RenderHelper {
     sprite_vertical_scale: number;
 
     constructor(private game: Game) {
-        this.coordinatesTranslator = new HexGridCoordinatesTranslator(100, 60, 72, 62, game.grid.width, game.grid.height);
+        this.coordinatesTranslator = new HexGridCoordinatesTranslator(60, 60, 72, 62, game.grid.width, game.grid.height);
         this.sprite_vertical_scale = 0.88;
+    }
+
+    public getSceneSize(): { width: number, height: number } {
+        return {
+            width: (this.game.grid.width + 1) * this.coordinatesTranslator.spriteWidthThreeFourth,
+            height: (this.game.grid.height + 1) * this.coordinatesTranslator.spriteHeight,
+        }
     }
 
     public getTerrainTexture(terrainType: TerrainType): PIXI.Texture {

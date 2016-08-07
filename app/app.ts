@@ -8,7 +8,7 @@ let render: Render;
 
 function Run() {
     let random = new DefaultRandom();
-    game = new Game(random, 10, 10);
+    game = new Game(random, 15, 8);
     render = new Render(document, game);
 
     render.onCellClick.subscribe(cellIndex => {

@@ -31,7 +31,8 @@ export class Render {
         this.game = game;
 
         (PIXI.utils as any)._saidHello = true;
-        let renderer = PIXI.autoDetectRenderer(1200, 720, { backgroundColor: 0xffffff });
+        let renderSize = this.renderHelper.getSceneSize();
+        let renderer = PIXI.autoDetectRenderer(renderSize.width, renderSize.height, { backgroundColor: 0xffffff });
         document.body.appendChild(renderer.view);
 
         // create the root of the scene graph

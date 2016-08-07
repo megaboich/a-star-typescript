@@ -5,8 +5,8 @@ export class HexGridCoordinatesTranslator {
 
     constructor(private leftMargin: number,
         private topMargin: number,
-        private spriteWidth: number,
-        private spriteHeight: number,
+        public spriteWidth: number,
+        public spriteHeight: number,
         private gridWidth: number,
         private gridHeight: number) {
 
