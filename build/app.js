@@ -11,7 +11,7 @@ webpackJsonp([0],[
 	var render;
 	function Run() {
 	    var random = new random_1.DefaultRandom();
-	    game = new game_1.Game(random, 10, 10);
+	    game = new game_1.Game(random, 15, 8);
 	    render = new pixi_game_render_1.Render(document, game);
 	    render.onCellClick.subscribe(function (cellIndex) {
 	        var cell = game.grid.getCell(cellIndex).value;
@@ -230,7 +230,8 @@ webpackJsonp([0],[
 	        this.renderHelper = new pixi_game_render_helper_1.RenderHelper(game);
 	        this.game = game;
 	        PIXI.utils._saidHello = true;
-	        var renderer = PIXI.autoDetectRenderer(1200, 720, { backgroundColor: 0xffffff });
+	        var renderSize = this.renderHelper.getSceneSize();
+	        var renderer = PIXI.autoDetectRenderer(renderSize.width, renderSize.height, { backgroundColor: 0xffffff });
 	        document.body.appendChild(renderer.view);
 	        // create the root of the scene graph
 	        this.stage = new PIXI.Container();
@@ -447,12 +448,18 @@ webpackJsonp([0],[
 	            ]
 	        };
 	        this.MiscTextures = {
-	            SmallArrow: PIXI.Texture.fromImage(__webpack_require__(193)),
-	            Stub: PIXI.Texture.fromImage(__webpack_require__(192)),
+	            SmallArrow: PIXI.Texture.fromImage(__webpack_require__(188)),
+	            Stub: PIXI.Texture.fromImage(__webpack_require__(189)),
 	        };
-	        this.coordinatesTranslator = new index_1.HexGridCoordinatesTranslator(100, 60, 72, 62, game.grid.width, game.grid.height);
+	        this.coordinatesTranslator = new index_1.HexGridCoordinatesTranslator(60, 60, 72, 62, game.grid.width, game.grid.height);
 	        this.sprite_vertical_scale = 0.88;
 	    }
+	    RenderHelper.prototype.getSceneSize = function () {
+	        return {
+	            width: (this.game.grid.width + 1) * this.coordinatesTranslator.spriteWidthThreeFourth,
+	            height: (this.game.grid.height + 1) * this.coordinatesTranslator.spriteHeight,
+	        };
+	    };
 	    RenderHelper.prototype.getTerrainTexture = function (terrainType) {
 	        switch (terrainType) {
 	            case game_1.TerrainType.Desert:
@@ -2342,20 +2349,16 @@ webpackJsonp([0],[
 	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAYAAABV7bNHAAAEV0lEQVR42t2c247UMAyG9xJxBoF4O8QZBOJ9ELCcBOIpx6W+iBTkmXz1uq6nu9IvNGwmm/zxOW4v1vq58fSTzJiO4eazz9Ot518a9LMZA+O9c8nFOf3Mi5QZ/23gzsvL6d7r7/ovkqK/6xEkuo09H5LmxYoSAaT4YQn3zF9KEKtWnAwDQwzPJdeJIL9dYhWVcnJGp3/31bfp9ouvZjNgo4gkA51jME8dSfMGpS1M0W1eAerhsDMw1ow3alZETpMSs5GoKlmpAOlD0qVEvQJ2pN+cgqQoSrbsxTCDYU2FbBr3GG/CagJGl+cKqrRc57jHjB8QBW6/hqCKiJnnsGRLCTllhDGMA5gheybIb8/8kNSMvQE3YV034dj3vR6Qxre5JUV6Toh9v7EGM64zqujBEkIIiIuKVKtIHfUwRpLZDkUyCmJZ4FTCPweFDbJazgULrYmU2VstCSplHfXiLFoBp5/gzrnMQocmYXLcKsD2AU528/hKorbHZN1XFH0FzlFQnZSwW2fxj0fIvd14+O7X9PjDnwb9DFIXVl2JEKSLG/wBiHatAW1q1o81NsyJ6AGKm5zUtMBfQuWo3Aak3oqBVBFUEPdYPHj7c3r0/vf05ONfRVPdfoy4VKuDfzOMnHQjTiSTpHlK94VmK+imwqMyS8ZQHTuLTEG3jiyzfXASw7j/5ofi1Foall0qsuTKUHpAIkiyosbZbLZ9NmSR5PkbIhoEGhAwh4FTQGPtUcc1i2geCZZzLmmAFOBYOgz1aAr1Yopj2iBGesxpwB8v81w8H/+epUvVWMw1MoANNH9Xs2wd76kMgPqlQZphPiwgpMHYqJVsArn4YajRA/bizecOansOJQWw/L/BqsbO5pBgoEEy6g2+adU5sU6xAaIduBfEQwgLMUFiF4w1GHuDC2H9ryj6e1VYqEDWiPJ3h9k0ASJvEzmDS067zoZ7s8pgkZNSPhD2bEsPW6itzl855DFbqlIUgvUgXBCTY65fIPF19PqkHoJcpbVXN9DsSb9ph3tnok/YP7/R5/hnBHF0sMJC2PCZeKP7v3z1YaJAeqCqGFjYbpqrmCAmCTrayxqoQNLSyLEENQTULfI4FBGxFiTWuMANSUtjjxHI2/VFLjXicFjQPhwgh3O0BDuRllMxJNw0bhZRVVHkeMtry5zk8E1HAIGCfs79PBDkJAlUJRbTMCn+C0seJxktwAk2B1QvT1rTOl3ZLXNCW12Ul5QnfBKeowADm5DZA0FhW+QhJ3jRp6DmKiXY+0RQ+bMacXvCknesJLy0nLLvJ36YJO7wGKRIGz4vxp4rWhtWBOxT9VOH8ZY7glGhvT2zCt6j5o0L/qi53mD3iNkeBj6KuakU6QK0c7Rr+O4X1UERTg1GjRVEZN3bFwbulKUp/xpoQ9WKXxF5Nxnpaj27N8CwtDAxgdvRanI40y/v1Kh/qQnboorMfB/vMJsDOiUIbl9TsY834bm7TeNBYzo5/wCUHY6MCNkotgAAAABJRU5ErkJggg=="
 
 /***/ },
-/* 188 */,
-/* 189 */,
-/* 190 */,
-/* 191 */,
-/* 192 */
-/***/ function(module, exports) {
-
-	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAfSURBVDhPY/wPBAwkACYoTTQY1UAMGNVADKC1BgYGAF6OBBwFRhtVAAAAAElFTkSuQmCC"
-
-/***/ },
-/* 193 */
+/* 188 */
 /***/ function(module, exports) {
 
 	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAMCAYAAAAgT+5sAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTCtCgrAAAABKklEQVRIS2P4//8/VTE1wbdvDDM/fGAwgXLxA2yOoQRTE/z+zXDn71+Gfz9+MCx/+ZJBGSqMHWBzDCWYioAR5BGY0UAP/QTG0MRnzxhEofKoAN0hlOJfvxkuAC0FWUwxxmL8/z9/GD4CPVR14QIDN9QLEIBVNQUYaNFFLMJUx0B7nn75wpC6fz8Dy5D2CAwDk9+1mzcZ9LHLUoDp6ZHPnxnuHjvGkAyMDw7sKijA9PDI9+8Mr4B5pEJfn0EA6AlGmiSthw8ZMu/cYWilBgYWHO+Qjf/1i+EzMBn1BgYySMI9AAPIjqAGpiaAFb/AWP51/z7Dwvp6BjWgMBNEFg1gcwwlmJoAGCO3nz5l2DpzJoMpkAspnXABbI6hBFMTbNzIoAek2CA8fICBAQA6vdzXlQ5ahwAAAABJRU5ErkJggg=="
+
+/***/ },
+/* 189 */
+/***/ function(module, exports) {
+
+	module.exports = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAfSURBVDhPY/wPBAwkACYoTTQY1UAMGNVADKC1BgYGAF6OBBwFRhtVAAAAAElFTkSuQmCC"
 
 /***/ }
 ]);
